@@ -24,6 +24,7 @@
   ],
   "ResourceOrderSettings":[
     {"name":"fntDebug","order":1,"path":"fonts/fntDebug/fntDebug.yy",},
+    {"name":"objCollision","order":6,"path":"objects/objCollision/objCollision.yy",},
     {"name":"objMainMenuButton","order":1,"path":"objects/objMainMenuButton/objMainMenuButton.yy",},
     {"name":"objPlayerTest","order":2,"path":"objects/objPlayerTest/objPlayerTest.yy",},
     {"name":"objTileDrawing","order":4,"path":"objects/objTileDrawing/objTileDrawing.yy",},
@@ -35,6 +36,7 @@
     {"name":"sprMainMenuBackgroundHouse","order":4,"path":"sprites/sprMainMenuBackgroundHouse/sprMainMenuBackgroundHouse.yy",},
     {"name":"sprMainMenuBackgroundSky","order":1,"path":"sprites/sprMainMenuBackgroundSky/sprMainMenuBackgroundSky.yy",},
     {"name":"sprMainMenuBackgroundTree","order":3,"path":"sprites/sprMainMenuBackgroundTree/sprMainMenuBackgroundTree.yy",},
+    {"name":"sprRock","order":7,"path":"sprites/sprRock/sprRock.yy",},
     {"name":"sprSummerForestTiles","order":5,"path":"sprites/sprSummerForestTiles/sprSummerForestTiles.yy",},
     {"name":"sprTileObjectMask","order":1,"path":"sprites/sprTileObjectMask/sprTileObjectMask.yy",},
     {"name":"tsGentleForest","order":1,"path":"tilesets/tsGentleForest/tsGentleForest.yy",},

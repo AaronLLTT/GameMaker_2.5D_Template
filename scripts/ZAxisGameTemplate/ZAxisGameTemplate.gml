@@ -243,6 +243,7 @@ function Player_Movement() {
 	}
     
     PlayerCollisions(objTileDrawing);
+    Player_Object_Collisions(objCollision);
 	
 	Camera_Update();
 	
@@ -338,6 +339,63 @@ function Collisions_3D(newX, newY, newZ, collisionToCheck) {
     else {
         return false;
     }
+}
+
+function Object_Collisions_3D(newX, newY, newZ, object) {
+    var firstXYMeeting = false;
+    var zMeeting = false;
+    var secondXYMeeting = false;
+    
+    firstXYMeeting = instance_place(newX, newY, object);
+    
+    if firstXYMeeting {
+        zMeeting = rectangle_in_rectangle(0, secondXYMeeting.z - 0.25, 1, secondXYMeeting.z + secondXYMeeting.zHeight - 0.25,
+        0, newZ, 1, newZ + zHeight);
+    }
+    
+    return firstXYMeeting && zMeeting;
+}
+
+function Player_Object_Collisions(object) {
+    var collision = false;
+    //X Collisions
+    if Object_Collisions_3D(x + xSpeed, y, z, object) {
+        while(!Object_Collisions_3D(x + sign(xSpeed), y, z, object)) {
+            x += sign(xSpeed);
+        }
+        xSpeed = 0;
+        collision = true;
+    }
+    //Y Collisions
+    if Object_Collisions_3D(x, y + ySpeed, z, object) {
+        while(!Object_Collisions_3D(x, y + sign(ySpeed), z, object)) {
+            y += sign(ySpeed);
+        }
+        ySpeed = 0;
+        collision = true;
+    }
+    //Z Collisions
+    if Object_Collisions_3D(x, y, z + zSpeed, object) {
+        while(!Object_Collisions_3D(x, y, z + sign(zSpeed), object)) {
+            z += sign(zSpeed);
+        }
+        zSpeed = 0;
+        time_source_reset(global.CTTimeSource); //Used for Coyote Time
+        collision = true;
+    }
+    //Diagonal Collisions
+    if Object_Collisions_3D(x + xSpeed, y + ySpeed, z + zSpeed, object) {
+        while(!Object_Collisions_3D(x + sign(xSpeed), y + sign(ySpeed), z + sign(zSpeed), object)) {
+            x += sign(xSpeed);
+            y += sign(ySpeed);
+            z += sign(zSpeed);
+        }
+        xSpeed = 0;
+        ySpeed = 0;
+        zSpeed = 0;
+        collision = true;
+    }
+    return collision;
 }
 
 /**
