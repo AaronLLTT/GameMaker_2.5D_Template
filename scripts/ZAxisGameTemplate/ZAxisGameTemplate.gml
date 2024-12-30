@@ -387,12 +387,12 @@ function Get_Object_Height(newX, newY, objectToCheck) {
     var objectHeight = 0;
 
     if firstObjectCollision {
-        objectCollision = instance_place(newX, newY - firstObjectCollision.zHeight - firstObjectCollision.z, objTileDrawing);
+        objectCollision = instance_place(newX, newY - firstObjectCollision.zHeight - firstObjectCollision.z, objectToCheck);
         //Run a set of checks to see if there's a blank space between the first collision and the second. If there is, then the two are not connected
         //so continue on as normal until the player is colliding correctly
         if objectCollision {
             for(var i = 0; i < firstObjectCollision.zHeight / global.TileHeight; i += global.TileHeight) {
-                if !instance_place(firstObjectCollision.x, firstObjectCollision.y - ((i + 1) * global.TileHeight), objTileDrawing) {
+                if !instance_place(firstObjectCollision.x, firstObjectCollision.y - ((i + 1) * global.TileHeight), objectToCheck) {
                     objectCollision = false;
                 }
             }
