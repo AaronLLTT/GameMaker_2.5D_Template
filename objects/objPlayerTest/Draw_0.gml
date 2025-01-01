@@ -1,5 +1,6 @@
 /// @description Draw Self and Shadow
 draw_sprite(sprite_index, image_index, x, y - z);
+//draw_rectangle_color(bbox_left, bbox_top, bbox_right, bbox_bottom, c_red, c_red, c_red, c_red, false);
 
 if zSpeed != 0 {
 	if !surface_exists(surf)

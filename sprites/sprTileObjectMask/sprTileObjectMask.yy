@@ -1,7 +1,7 @@
 {
   "$GMSprite":"",
   "%Name":"sprTileObjectMask",
-  "bboxMode":0,
+  "bboxMode":2,
   "bbox_bottom":15,
   "bbox_left":0,
   "bbox_right":15,
@@ -25,8 +25,8 @@
   "nineSlice":null,
   "origin":0,
   "parent":{
-    "name":"Tile Depth Sorting",
-    "path":"folders/Objects/Tile Depth Sorting.yy",
+    "name":"Sprites",
+    "path":"folders/Sprites.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

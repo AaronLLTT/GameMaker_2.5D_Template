@@ -61,16 +61,30 @@ function Define_Tile_Layers(tileWidth, tileHeight) {
     function is_tile_layer_to_keep(layerToTest) {
         var matchingTileLayer = false;
         var nonCollisionLayer = false;
-        if layerelementtype_tilemap == layer_get_element_type(layerToTest) {
+        if string_count("ts", layer_get_name(layerToTest)) > 0 {//layerelementtype_tilemap == layer_get_element_type(layerToTest) {
             matchingTileLayer = true;
         }
-        if string_count("_", layer_get_name(layerToTest)) > 0 {
+        if string_count("_Z", layer_get_name(layerToTest)) > 0 {
             nonCollisionLayer = true;
         }
         
         return matchingTileLayer && nonCollisionLayer;
     }
     global.Layers = array_filter(global.Layers, is_tile_layer_to_keep);
+    global.TallestLayer = 0;
+    
+    //Get the tallest layer
+    
+    for(var i = 0; i < array_length(global.Layers); ++i) {
+        var layerName = layer_get_name(global.Layers[i]);
+        var tileProps = string_split(layerName, "_");
+        var tileZ =  real(string_digits(tileProps[1]));
+        var tileZHeight = real(string_digits(tileProps[2]));
+        
+        if tileZ + tileZHeight > global.TallestLayer {
+            global.TallestLayer = tileZ + tileZHeight;
+        }
+    }
     
     //Hide the tile layers that have a Z Height from being drawn by default because we will draw them manually with different depths
 	for(var i = 0; i < array_length(global.Layers); ++i) {
@@ -127,6 +141,32 @@ function Camera_Controls() {
         global.CameraHeight += (9 * 4);
         camera_set_view_size(global.Camera, global.CameraWidth, global.CameraHeight);
     }
+}
+
+/**
+* Move the camera to the player and lock it within the room boundaries
+*/
+function Camera_Update() {
+    //Move the camera
+    var viewX = camera_get_view_x(view_camera[0]);
+    var viewY = camera_get_view_y(view_camera[0]);
+    var viewWidth = camera_get_view_width(view_camera[0]);
+    var viewHeight = camera_get_view_height(view_camera[0]);
+
+    var gotoX = x + (xSpeed) - (viewWidth * 0.5);
+    var gotoY = y + (ySpeed) - (viewHeight * 0.5) - z; //Adjust camera for y + z
+
+    var newCamX = lerp(viewX, gotoX, global.CamSpeed);
+    var newCamY = lerp(viewY, gotoY, global.CamSpeed);
+    
+    //Clamp to keep camera in room
+    newCamX = clamp(newCamX, 0, room_width - viewWidth);
+    newCamY = clamp(newCamY, 0, room_height - viewHeight);
+
+    camera_set_view_pos(view_camera[0], newCamX, newCamY);
+    
+    instance_deactivate_region(viewX, viewY, viewWidth, viewHeight, false, true);
+    instance_activate_region(viewX - 96, viewY - 96, viewWidth + newCamX + 96, viewHeight + newCamY + 96, true);
 }
 
 /**
@@ -206,7 +246,9 @@ function Player_Movement() {
 	
 	//Z Based Jumping
 	//Get any object I'm colliding with below me and set it as my floor
-	zFloor = Get_Object_Height(x, y, objTileDrawing);
+    var firstZ = Get_Highest_Height(x, y, objTileParent);
+    var secondZ = Get_Highest_Height(x, y, objCollisionParent);
+	zFloor = max(firstZ, secondZ);
 
 	var onGround = z == zFloor;
 	
@@ -242,8 +284,8 @@ function Player_Movement() {
 		}
 	}
     
-    PlayerCollisions(objTileDrawing);
-    Player_Object_Collisions(objCollision);
+    Player_Collisions(objTileDrawing);
+    Player_Collisions(objCollisionParent);
 	
 	Camera_Update();
 	
@@ -252,131 +294,58 @@ function Player_Movement() {
 	z += zSpeed;
 }
 
-/**
- * Check for collisions along all 3 axis and diagonally
- * @param {any*} The object to check for
- * @returns {bool} True if there's a collision, false if none
- */
-function PlayerCollisions(object) {
-	var collision = false;
-	//X Collisions
-	if Collisions_3D(x + xSpeed, y, z, object) {
-		while(!Collisions_3D(x + sign(xSpeed), y, z, object)) {
-			x += sign(xSpeed);
-		}
-		xSpeed = 0;
-		collision = true;
-	}
-	//Y Collisions
-	if Collisions_3D(x, y + ySpeed, z, object) {
-		while(!Collisions_3D(x, y + sign(ySpeed), z, object)) {
-			y += sign(ySpeed);
-		}
-		ySpeed = 0;
-		collision = true;
-	}
-	//Z Collisions
-	if Collisions_3D(x, y, z + zSpeed, object) {
-		while(!Collisions_3D(x, y, z + sign(zSpeed), object)) {
-			z += sign(zSpeed);
-		}
-		zSpeed = 0;
-        time_source_reset(global.CTTimeSource); //Used for Coyote Time
-		collision = true;
-	}
-	//Diagonal Collisions
-	if Collisions_3D(x + xSpeed, y + ySpeed, z + zSpeed, object) {
-		while(!Collisions_3D(x + sign(xSpeed), y + sign(ySpeed), z + sign(zSpeed), object)) {
-			x += sign(xSpeed);
-			y += sign(ySpeed);
-			z += sign(zSpeed);
-		}
-		xSpeed = 0;
-		ySpeed = 0;
-		zSpeed = 0;
-		collision = true;
-	}
-	return collision;
-}
-
-/**
- * Checks the 3D world for collisions with the player and returns the ID of the collider or false
- * @param {real} newX The X position to check
- * @param {real} newY The Y position to check
- * @param {real} newZ The Z position to check
- * @param {any*} collisionToCheck The ID to check a collision for
- */
-function Collisions_3D(newX, newY, newZ, collisionToCheck) {
-    var firstXYMeeting = false;
-    var xyMeeting = false;
-    var zMeeting = false;
-    firstXYMeeting = instance_place(newX, newY, collisionToCheck);
-    
-    //Check again with zHeight of that collision to allow moving behind taller tile set layers
-    if firstXYMeeting {
-        xyMeeting = instance_place(newX, newY - firstXYMeeting.zHeight - firstXYMeeting.z, collisionToCheck);
-        
-        //Run a set of checks to see if there's a blank space between the first collision and the second. If there is, then the two are not connected
-        //so continue on as normal until the player is colliding correctly
-        if xyMeeting {
-            for(var i = 0; i < firstXYMeeting.zHeight / global.TileHeight; i += global.TileHeight) {
-                if !instance_place(firstXYMeeting.x, firstXYMeeting.y - ((i + 1) * global.TileHeight), objTileDrawing) {
-                    xyMeeting = false;
-                }
-            }
-        }
-    }
-    
-    if xyMeeting {
-        //The final z check
-        var otherZ = xyMeeting.z + xyMeeting.zHeight - 0.25;
-        zMeeting = rectangle_in_rectangle(0, xyMeeting.z - 0.25, 1, xyMeeting.z + xyMeeting.zHeight - 0.25, 0, newZ, 1, newZ + zHeight); //Maybe add zHeight?
-    }
-    
-    if xyMeeting && zMeeting {
-        return xyMeeting;
-    }
-    else {
-        return false;
-    }
-}
-
-function Object_Collisions_3D(newX, newY, newZ, object) {
+function Collisions_3D(newX, newY, newZ, object) {
     var firstXYMeeting = false;
     var zMeeting = false;
-    var secondXYMeeting = false;
     
     firstXYMeeting = instance_place(newX, newY, object);
     
     if firstXYMeeting {
-        zMeeting = rectangle_in_rectangle(0, secondXYMeeting.z - 0.25, 1, secondXYMeeting.z + secondXYMeeting.zHeight - 0.25,
+        //Check for a list of collisions
+        var listOfCollisions = ds_list_create();
+        instance_place_list(newX, newY, object, listOfCollisions, false);
+        
+        var lowestZMeeting;
+        for(var i = 0; i < ds_list_size(listOfCollisions); ++i) {
+            //Get the tile with the lowest z to check for a collision against
+            if i == 0 {
+                lowestZMeeting = listOfCollisions[| i];
+            }
+            
+            if listOfCollisions[| i].z < lowestZMeeting.z {
+                lowestZMeeting = listOfCollisions[| i];
+            }
+        }
+        ds_list_destroy(listOfCollisions);
+        
+        zMeeting = rectangle_in_rectangle(0, lowestZMeeting.z - 0.25, 1, lowestZMeeting.z + lowestZMeeting.zHeight - 0.25,
         0, newZ, 1, newZ + zHeight);
     }
     
     return firstXYMeeting && zMeeting;
 }
 
-function Player_Object_Collisions(object) {
+function Player_Collisions(object) {
     var collision = false;
     //X Collisions
-    if Object_Collisions_3D(x + xSpeed, y, z, object) {
-        while(!Object_Collisions_3D(x + sign(xSpeed), y, z, object)) {
+    if Collisions_3D(x + xSpeed, y, z, object) {
+        while(!Collisions_3D(x + sign(xSpeed), y, z, object)) {
             x += sign(xSpeed);
         }
         xSpeed = 0;
         collision = true;
     }
     //Y Collisions
-    if Object_Collisions_3D(x, y + ySpeed, z, object) {
-        while(!Object_Collisions_3D(x, y + sign(ySpeed), z, object)) {
+    if Collisions_3D(x, y + ySpeed, z, object) {
+        while(!Collisions_3D(x, y + sign(ySpeed), z, object)) {
             y += sign(ySpeed);
         }
         ySpeed = 0;
         collision = true;
     }
     //Z Collisions
-    if Object_Collisions_3D(x, y, z + zSpeed, object) {
-        while(!Object_Collisions_3D(x, y, z + sign(zSpeed), object)) {
+    if Collisions_3D(x, y, z + zSpeed, object) {
+        while(!Collisions_3D(x, y, z + sign(zSpeed), object)) {
             z += sign(zSpeed);
         }
         zSpeed = 0;
@@ -384,8 +353,8 @@ function Player_Object_Collisions(object) {
         collision = true;
     }
     //Diagonal Collisions
-    if Object_Collisions_3D(x + xSpeed, y + ySpeed, z + zSpeed, object) {
-        while(!Object_Collisions_3D(x + sign(xSpeed), y + sign(ySpeed), z + sign(zSpeed), object)) {
+    if Collisions_3D(x + xSpeed, y + ySpeed, z + zSpeed, object) {
+        while(!Collisions_3D(x + sign(xSpeed), y + sign(ySpeed), z + sign(zSpeed), object)) {
             x += sign(xSpeed);
             y += sign(ySpeed);
             z += sign(zSpeed);
@@ -398,68 +367,27 @@ function Player_Object_Collisions(object) {
     return collision;
 }
 
-/**
- * Move the camera to the player and lock it within the room boundaries
- */
-function Camera_Update() {
-	//Move the camera
-	var viewX = camera_get_view_x(view_camera[0]);
-	var viewY = camera_get_view_y(view_camera[0]);
-	var viewWidth = camera_get_view_width(view_camera[0]);
-	var viewHeight = camera_get_view_height(view_camera[0]);
-
-	var gotoX = x + (xSpeed) - (viewWidth * 0.5);
-	var gotoY = y + (ySpeed) - (viewHeight * 0.5) - z; //Adjust camera for y + z
-
-	var newCamX = lerp(viewX, gotoX, global.CamSpeed);
-	var newCamY = lerp(viewY, gotoY, global.CamSpeed);
-	
-	//Clamp to keep camera in room
-	newCamX = clamp(newCamX, 0, room_width - viewWidth);
-	newCamY = clamp(newCamY, 0, room_height - viewHeight);
-
-	camera_set_view_pos(view_camera[0], newCamX, newCamY);
-}
-
-/**
- * Disable all objects outside of the current camera view to ensure performance doesn't take a big hit in larger rooms
- */
-function Disable_Enable_Objects() {
-    cameraLeft = camera_get_view_x(global.Camera);
-    cameraTop = camera_get_view_y(global.Camera);
-    
-    instance_deactivate_region(cameraLeft + xSpeed, cameraTop + ySpeed, global.CameraWidth + xSpeed, global.CameraHeight + ySpeed, false, true);
-    instance_activate_region(cameraLeft + xSpeed, cameraTop + ySpeed, global.CameraWidth + xSpeed, global.CameraHeight + ySpeed, true);
-}
-
-/**
- * Used to set the zFloor variable for the player which controls if they're on the ground, can jump, and depth
- * @param {real} newX The x position to check, usually x + xSpeed
- * @param {real} newY The y position to check, usually y + ySpeed
- * @param {any*} The object to check for a collision with and get its height
- * @returns {real} The height of the object it found
- */
-function Get_Object_Height(newX, newY, objectToCheck) {
-    var firstObjectCollision = instance_place(newX, newY, objectToCheck);
-    var objectCollision = 0;
+function Get_Highest_Height(newX, newY, object) {
     var objectHeight = 0;
+    var collision = instance_place(newX, newY, object);
+    
+    if collision && collision.z + collision.zHeight <= z {
+        objectHeight = collision.z + collision.zHeight;
+    }
+    
+    return objectHeight;
+}
 
-    if firstObjectCollision {
-        objectCollision = instance_place(newX, newY - firstObjectCollision.zHeight - firstObjectCollision.z, objectToCheck);
-        //Run a set of checks to see if there's a blank space between the first collision and the second. If there is, then the two are not connected
-        //so continue on as normal until the player is colliding correctly
-        if objectCollision {
-            for(var i = 0; i < firstObjectCollision.zHeight / global.TileHeight; i += global.TileHeight) {
-                if !instance_place(firstObjectCollision.x, firstObjectCollision.y - ((i + 1) * global.TileHeight), objectToCheck) {
-                    objectCollision = false;
+function Delete_Top_Tiles() {
+    for(var i = room_height; i > 0; i -= global.TileHeight) {
+        for(var j = 0; j < room_width; j += global.TileWidth) {
+            var tile = instance_place(j, i, objTileDrawing);
+            
+            if tile {
+                with(tile) {
+                    event_user(0);
                 }
             }
         }
     }
-	
-	if objectCollision && (objectCollision.zHeight + objectCollision.z) <= z {
-		objectHeight = objectCollision.z + objectCollision.zHeight;
-	}
-
-	return objectHeight;
 }

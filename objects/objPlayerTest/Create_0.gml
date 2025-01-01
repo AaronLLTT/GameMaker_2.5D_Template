@@ -9,3 +9,5 @@ Define_Tile_Layers(16, 16);
 //Define_Camera(1920, 1080, 640, 360, false);
 
 Define_Depth_Sorting();
+
+Delete_Top_Tiles();

@@ -17,8 +17,8 @@
   ],
   "name":"rmInit",
   "parent":{
-    "name":"Tile Depth Sorting",
-    "path":"folders/Objects/Tile Depth Sorting.yy",
+    "name":"Rooms",
+    "path":"folders/Rooms.yy",
   },
   "parentRoom":null,
   "physicsSettings":{
