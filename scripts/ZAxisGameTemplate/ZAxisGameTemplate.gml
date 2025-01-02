@@ -246,9 +246,10 @@ function Player_Movement() {
 	
 	//Z Based Jumping
 	//Get any object I'm colliding with below me and set it as my floor
-    var firstZ = Get_Highest_Height(x, y, objTileParent);
+    var firstZ = Get_Highest_Height(x, y, objTileDrawing);
     var secondZ = Get_Highest_Height(x, y, objCollisionParent);
-	zFloor = max(firstZ, secondZ);
+	var stairs = 0//Get_Highest_Height(x, y, objStairs);
+	zFloor = max(firstZ, secondZ, stairs);
 
 	var onGround = z == zFloor;
 	
@@ -286,6 +287,8 @@ function Player_Movement() {
     
     Player_Collisions(objTileDrawing);
     Player_Collisions(objCollisionParent);
+	
+	//Specific collisions for stairs
 	
 	Camera_Update();
 	
