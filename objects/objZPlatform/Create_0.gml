@@ -2,7 +2,7 @@
 zHeight = 32;
 
 //Moving Properties
-moveSpeed = 1;
+moveSpeed = 0;
 moveDistance = 60;
 moveDirection = 1;
 

@@ -10,9 +10,15 @@ if Collisions_3D(x, y, z, objPlayerTest) {
 }
 
 //If the player is directly underneath the platform
+var player = instance_place(x, y, objPlayerTest);
+if player && player.z < z {
+    moveSpeed = 0;
+}
+else {
+    --moveDistance;
+    moveSpeed = 1;
+}
 
-
---moveDistance;
 if moveDistance < 0 {
     moveDirection *= -1;
     moveDistance = 60;

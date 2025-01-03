@@ -6,12 +6,13 @@
  * @param {any*} left The left key
  * @param {any*} jump The jump button
  */
-function Define_Player_Controls(up, down, right, left, jump) {
+function Define_Player_Controls(up, down, right, left, jump, hold) {
 	global.MoveRight = right;
 	global.MoveLeft = left;
 	global.MoveUp = up;
 	global.MoveDown = down;
 	global.Jump = jump;
+    global.Hold = hold;
 }
 
 /**
@@ -35,7 +36,7 @@ function Define_Player_Movement(walkSpeed, jumpHeight, gameGravity, coyoteTime =
 	//Player Instance Variables
 	z = 0; //Where the player is currently in the z axis
 	zSpeed = 0; //The current speed in the z axis
-	zHeight = abs(bbox_top - bbox_bottom); //Used for calculating collisions
+	zHeight = 16; //Used for calculating collisions
 	zFloor = 0; //The place to land on
 	xSpeed = 0; //The x directional movement
 	ySpeed = 0; //The y directional movement
@@ -252,6 +253,13 @@ function Player_Movement() {
 	zFloor = max(firstZ, secondZ, stairs);
 
 	var onGround = z == zFloor;
+    
+    //If we're on a z platform going down
+    if !onGround && Collisions_3D(x, y, z - 2, objZPlatform) {
+        zSpeed = 0;
+        z = zFloor;
+        onGround = true;
+    }
 	
 	//Jump up
 	if jump && onGround {
@@ -285,8 +293,26 @@ function Player_Movement() {
 		}
 	}
     
+    //Push boxes around
+    var box = collision_rectangle(bbox_left - 3, bbox_top - 3, bbox_right + 3, bbox_bottom + 3, objBox, true, true);
+    if box && mouse_check_button(global.Hold) && onGround {
+        xSpeed /= 4;
+        ySpeed /= 4;
+        box.xSpeed = xSpeed;
+        box.ySpeed = ySpeed;
+        box.moving = true;
+    }
+    else if box && !mouse_check_button(global.Hold) {
+        box.moving = false;
+    }
+    else if box && !onGround {
+        box.moving = false;
+    }
+    
     Player_Collisions(objTileDrawing);
     Player_Collisions(objCollisionParent);
+    Get_Unstuck();
+
 	
 	//Specific collisions for stairs
 	
@@ -295,6 +321,12 @@ function Player_Movement() {
 	x += xSpeed;
 	y += ySpeed;
 	z += zSpeed;
+}
+
+function Get_Unstuck() {
+    if Collisions_3D(x, y, z, all) {
+        //show_message("stuck inside");
+    }
 }
 
 function Collisions_3D(newX, newY, newZ, object) {

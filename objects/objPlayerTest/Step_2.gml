@@ -36,5 +36,14 @@ if objectCollision {
     objectDepth = objectCollision.z + objectCollision.zHeight;
 }
 
+//Z platform depth
+var zPlatform = instance_place(x, y - sprite_height, objZPlatform);
+if zPlatform {
+    zPlatform = z;
+}
+else {
+    zPlatform = 0;
+}
 
-UpdateLayers(y, zFloor + tileCollisionDepth + bridgeCollision + objectDepth);
+
+UpdateLayers(y, zFloor + tileCollisionDepth + bridgeCollision + objectDepth + zPlatform);

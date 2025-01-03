@@ -1,12 +1,13 @@
 {
   "$GMObject":"",
-  "%Name":"objRock",
+  "%Name":"objBox",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"objRock",
+  "name":"objBox",
   "overriddenProperties":[],
   "parent":{
     "name":"Tile Depth Sorting",
@@ -29,13 +30,15 @@
   "physicsShape":1,
   "physicsShapePoints":[],
   "physicsStartAwake":true,
-  "properties":[],
+  "properties":[
+    {"$GMObjectProperty":"v1","%Name":"z","filters":[],"listItems":[],"multiselect":false,"name":"z","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"0","varType":0,},
+  ],
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"sprRock",
-    "path":"sprites/sprRock/sprRock.yy",
+    "name":"sprBox",
+    "path":"sprites/sprBox/sprBox.yy",
   },
   "spriteMaskId":null,
   "visible":true,
