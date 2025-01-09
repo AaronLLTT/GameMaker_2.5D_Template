@@ -1,0 +1,28 @@
+Welcome!
+
+This game template aims to provide you with the starter project to make your own 2.5D game with a Z axis and jumping in GameMaker.
+
+Here's what you need to know to use it:
+
+1) Tile layers are key and they must follow the proper naming conventions. For a non-collision, non-depth sorted tile layer, use any name you prefer but do NOT include _
+To have a tile layer be collideable, you must include _Z16 <---Add any number for where it lives on the Z axis, and then immediately after _H0 <--Add any number for its height.
+The order of tiles in the room doesn't matter.
+
+2) A player object needs to be created and called with the following scripts in this order:
+Define_Player_Controls(ord("W"), ord("S"), ord("D"), ord("A"), vk_space);
+Define_Player_Movement(3.5, -4.5, .25, 3);
+Define_Tile_Layers(16, 16);
+Define_Depth_Sorting();
+
+These functions are defined in the script ZAxisGameTemplate, with descriptions of what to pass in when using these functions.
+
+3) To get the camera to work properly, creat an object and put it in a blank room that runs when your game begins. Then have that object call these functions:
+Define_Camera(1280, 720, 640, 360, false, 0.05);
+room_goto(rmMainMenu); <--- Go to your real starting room here
+
+And in its Room Start event, call:
+Set_Camera();
+
+This ensures the camera gets created.
+
+Enjoy!

@@ -1,0 +1,3 @@
+Name,Sprite,Inventory_Icon,Grow_Time,Grow_Bonus,Grow_Penalty,Grow_Speed,Plant_Date,Decay_Time,Decay_Bonus,Decay_Penalty
+Strawberry,sprStrawberryCrop,sprStrawberryCropIcon,6,0,0,1,null,3,0,0
+Radish,sprRadishCrop,sprRadishCropIcon,6,0,0,1,null,3,0,0

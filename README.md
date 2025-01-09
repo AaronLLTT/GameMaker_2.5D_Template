@@ -13,3 +13,4 @@ This template is a game demo with comments throughout the code to allow you to t
 - Bridges the player can walk under and jump onto
 - Specific object depths for tall things like trees
 - Broken down into scripts for easy use in other projects
+
