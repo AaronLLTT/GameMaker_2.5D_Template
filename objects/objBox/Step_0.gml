@@ -22,13 +22,4 @@ x += xSpeed;
 y += ySpeed;
 z += zSpeed;
 
-//Check for collisions after being pushed behind tiles
-var topTile = instance_place(x, y, objTopTile);
-if topTile && topTile.z + topTile.zHeight > z + zHeight {
-    topTile = topTile.z + topTile.zHeight;
-}
-else {
-    topTile = 0;
-}
-
-UpdateLayers(y, z - zHeight - 4 - topTile);
+UpdateLayers(y, z - zHeight - 4);
