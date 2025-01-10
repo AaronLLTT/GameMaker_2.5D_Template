@@ -50,7 +50,7 @@
     {"id":{"name":"How to alter this Demo","path":"notes/How to alter this Demo/How to alter this Demo.yy",},},
     {"id":{"name":"objBox","path":"objects/objBox/objBox.yy",},},
     {"id":{"name":"objCollisionParent","path":"objects/objCollisionParent/objCollisionParent.yy",},},
-    {"id":{"name":"objInitGame","path":"objects/objInitGame/objInitGame.yy",},},
+    {"id":{"name":"objGameManager","path":"objects/objGameManager/objGameManager.yy",},},
     {"id":{"name":"objMainMenu","path":"objects/objMainMenu/objMainMenu.yy",},},
     {"id":{"name":"objMainMenuButton","path":"objects/objMainMenuButton/objMainMenuButton.yy",},},
     {"id":{"name":"objPlayerTest","path":"objects/objPlayerTest/objPlayerTest.yy",},},

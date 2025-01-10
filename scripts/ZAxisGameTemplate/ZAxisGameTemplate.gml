@@ -59,10 +59,10 @@ function Define_Tile_Layers(tileWidth, tileHeight) {
 	global.TileZHeight = tileHeight * 2;
     //Get every tile layer and filter out the rest
 	global.Layers = layer_get_all();
-    function is_tile_layer_to_keep(layerToTest) {
+    var is_tile_layer_to_keep = function(layerToTest) {
         var matchingTileLayer = false;
         var nonCollisionLayer = false;
-        if string_count("ts", layer_get_name(layerToTest)) > 0 {//layerelementtype_tilemap == layer_get_element_type(layerToTest) {
+        if string_count("ts", layer_get_name(layerToTest)) > 0 {
             matchingTileLayer = true;
         }
         if string_count("_Z", layer_get_name(layerToTest)) > 0 {
@@ -72,22 +72,9 @@ function Define_Tile_Layers(tileWidth, tileHeight) {
         return matchingTileLayer && nonCollisionLayer;
     }
     global.Layers = array_filter(global.Layers, is_tile_layer_to_keep);
-    global.TallestLayer = 0;
-    
-    //Get the tallest layer
-    
-    for(var i = 0; i < array_length(global.Layers); ++i) {
-        var layerName = layer_get_name(global.Layers[i]);
-        var tileProps = string_split(layerName, "_");
-        var tileZ =  real(string_digits(tileProps[1]));
-        var tileZHeight = real(string_digits(tileProps[2]));
-        
-        if tileZ + tileZHeight > global.TallestLayer {
-            global.TallestLayer = tileZ + tileZHeight;
-        }
-    }
-    
-    //Hide the tile layers that have a Z Height from being drawn by default because we will draw them manually with different depths
+	
+    //Hide the tile layers that have a Z Height from being drawn by 
+	//default because we will draw them manually with different depths
 	for(var i = 0; i < array_length(global.Layers); ++i) {
         layer_set_visible(global.Layers[i], false);
 	}
@@ -148,7 +135,6 @@ function Camera_Controls() {
 * Move the camera to the player and lock it within the room boundaries
 */
 function Camera_Update() {
-    //Move the camera
     var viewX = camera_get_view_x(view_camera[0]);
     var viewY = camera_get_view_y(view_camera[0]);
     var viewWidth = camera_get_view_width(view_camera[0]);
@@ -190,9 +176,10 @@ function Define_Depth_Sorting() {
     
     //Create tile drawing objects at every spot a tile exists
     for(var h = 0; h < array_length(global.Layers); ++h) {
-        for(var i = -global.TileWidth / 2; i < room_width + global.TileWidth; i += global.TileWidth) {
-            for(var j = -global.TileHeight / 2; j < room_height + global.TileHeight; j += global.TileHeight) {
-                var tile = instance_place(i, j, layer_tilemap_get_id(global.Layers[h]));
+        for(var i = global.TileWidth / 2; i < room_width; i += global.TileWidth) {
+            for(var j = global.TileHeight / 2; j < room_height; j += global.TileHeight) {
+				var tile = tilemap_get_at_pixel(layer_tilemap_get_id(global.Layers[h]), i, j);
+                //var tile = instance_position(i, j, layer_tilemap_get_id(global.Layers[h]));
                 if tile {
                     //Get the properties of the tile based on the layer name 
                     /* Z is the z location it sits on the ground in, H is the height it goes into the air*/
@@ -205,20 +192,37 @@ function Define_Depth_Sorting() {
                     drawing.zHeight = tileZHeight;
                     var tileID = layer_tilemap_get_id(global.Layers[h]);
                     drawing.myTileID = tileID;
-                    var tileToDraw = tilemap_get_at_pixel(layer_tilemap_get_id(global.Layers[h]), i, j + global.TileHeight); //Compensate for a weird collision checking bug
+                    var tileToDraw = tilemap_get_at_pixel(layer_tilemap_get_id(global.Layers[h]), i, j);
                     drawing.myTile = tileToDraw;
                     var tileSet = tilemap_get_tileset(layer_tilemap_get_id(global.Layers[h]));
                     drawing.myTileSet = tileSet;
                     with(drawing) {
-                        //Put the actual object where I will check for collisions
-                        y = j + global.TileHeight / 2;
-                        x = i - global.TileWidth / 2;
-                        UpdateLayers(y, z); //Change where the tile lives on the layer for depth sorting to account for its z
+						//Change where the tile lives on the layer for depth sorting to account for its z
+                        UpdateLayers(y, z); 
                         //Check if it's a bridge
                         if z > 0 {
                             UpdateLayers(y, z + (z div 16));
                         }
                     }
+                }
+            }
+        }
+    }
+	Delete_Top_Tiles();
+}
+
+
+/**
+ * Trigger the user event 0 in every objTileDrawing object.
+ */
+function Delete_Top_Tiles() {
+    for(var i = room_height; i > 0; i -= global.TileHeight) {
+        for(var j = 0; j < room_width; j += global.TileWidth) {
+            var tile = instance_position(j, i, objTileDrawing);
+            
+            if tile {
+                with(tile) {
+                    event_user(0);
                 }
             }
         }
@@ -331,6 +335,14 @@ function Player_Movement() {
 	z += zSpeed;
 }
 
+/**
+ * The primary collision checking function for 3D collisions, accepts all 3 axis and compares the
+ calling objects properties to whatever is being checked against.
+ * @param {real} newX The new x location
+ * @param {real} newY The new y location
+ * @param {real} newZ The new z location
+ * @param {any*} object Whatever object you want to check for a collision against
+ */
 function Collisions_3D(newX, newY, newZ, object) {
     var firstXYMeeting = false;
     var zMeeting = false;
@@ -371,6 +383,11 @@ function Collisions_3D(newX, newY, newZ, object) {
     //return firstXYMeeting && zMeeting;
 }
 
+/**
+ * The player collision detection. Checks in all 3 axis, and diagonal. Also resets coyote timer
+ * @param {any*} object The object to check against
+ * @returns {bool} If there is a collision or not
+ */
 function Player_Collisions(object) {
     var collision = false;
     //X Collisions
@@ -413,6 +430,13 @@ function Player_Collisions(object) {
     return collision;
 }
 
+/**
+ * Used to get the highest Z of whatever is below the object calling it
+ * @param {real} newX The new x location
+ * @param {real} newY The new y location
+ * @param {any*} object The object to check for (all works here)
+ * @returns {real} Returns the height directly
+ */
 function Get_Highest_Height(newX, newY, object) {
     var objectHeight = 0;
     var collision = instance_place(newX, newY, object);
@@ -422,18 +446,4 @@ function Get_Highest_Height(newX, newY, object) {
     }
     
     return objectHeight;
-}
-
-function Delete_Top_Tiles() {
-    for(var i = room_height; i > 0; i -= global.TileHeight) {
-        for(var j = 0; j < room_width; j += global.TileWidth) {
-            var tile = instance_place(j, i, objTileDrawing);
-            
-            if tile {
-                with(tile) {
-                    event_user(0);
-                }
-            }
-        }
-    }
 }
